@@ -20,36 +20,48 @@
           <h1>Turn an industry and country into a five-year company plan.</h1>
           <p class="subtitle">
             This planner estimates org structure, yearly funding need, revenue, operating costs,
-            headcount, designations, salaries, and the reasoning behind each salary recommendation.
+            headcount, designations, salaries in local currency, and the reasoning behind each
+            salary recommendation.
           </p>
         </div>
 
         <form id="planner-form" class="planner-card">
-          <label>
-            <span>Industry</span>
-            <input
-              type="text"
-              id="industry"
-              name="industry"
-              placeholder="SaaS, fintech, manufacturing, consulting..."
-              required
-            />
-          </label>
+          <div class="planner-grid">
+            <label>
+              <span>Industry</span>
+              <select id="industry" name="industry" required>
+                <option value="">Select an industry</option>
+                {% for option in industry_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+              </select>
+            </label>
 
-          <label>
-            <span>Country</span>
-            <input
-              type="text"
-              id="country"
-              name="country"
-              placeholder="United States, India, Singapore..."
-              required
-            />
-          </label>
+            <label>
+              <span>Country</span>
+              <select id="country" name="country" required>
+                <option value="">Select a country</option>
+                {% for option in country_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label>
+              <span>Leanness</span>
+              <select id="leanness" name="leanness" required>
+                <option value="">Select an operating style</option>
+                {% for option in leanness_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
 
           <button type="submit">Generate blueprint</button>
           <p class="helper">
-            Outputs are generated in annual USD-equivalent terms so countries stay comparable.
+            Financials keep USD-equivalent planning values in the background, while compensation is
+            shown in the selected country's currency.
           </p>
           <p id="status" class="status"></p>
         </form>

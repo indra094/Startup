@@ -1,13 +1,18 @@
 from flask import Flask, jsonify, render_template, request
 
-from planner import generate_company_plan
+from planner import COUNTRY_OPTIONS, INDUSTRY_OPTIONS, LEANNESS_OPTIONS, generate_company_plan
 
 app = Flask(__name__)
 
 
 @app.get("/")
 def index():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        industry_options=INDUSTRY_OPTIONS,
+        country_options=COUNTRY_OPTIONS,
+        leanness_options=LEANNESS_OPTIONS,
+    )
 
 
 @app.post("/api/plan")
@@ -15,11 +20,12 @@ def create_plan():
     payload = request.get_json(silent=True) or request.form
     industry = str(payload.get("industry", "")).strip()
     country = str(payload.get("country", "")).strip()
+    leanness = str(payload.get("leanness", "")).strip()
 
-    if not industry or not country:
-        return jsonify({"error": "Both industry and country are required."}), 400
+    if not industry or not country or not leanness:
+        return jsonify({"error": "Industry, country, and leanness are required."}), 400
 
-    plan = generate_company_plan(industry=industry, country=country)
+    plan = generate_company_plan(industry=industry, country=country, leanness=leanness)
     return jsonify(plan)
 
 

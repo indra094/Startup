@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import math
 import re
 from typing import Any
 
@@ -12,6 +11,10 @@ YEARS = 5
 @dataclass(frozen=True)
 class CountryProfile:
     name: str
+    currency_code: str
+    currency_locale: str
+    usd_to_local: float
+    local_rounding: int
     labor_multiplier: float
     employer_oncost: float
     facility_multiplier: float
@@ -47,6 +50,23 @@ class IndustryProfile:
     capex_plan: tuple[int, ...]
     sales_marketing_ratio: float
     roles: tuple[RoleTemplate, ...]
+
+
+@dataclass(frozen=True)
+class LeannessProfile:
+    name: str
+    description: str
+    headcount_multiplier: float
+    salary_multiplier: float
+    band_spread_delta: float
+    revenue_multiplier: float
+    tools_multiplier: float
+    facilities_multiplier: float
+    compliance_multiplier: float
+    sales_marketing_multiplier: float
+    general_admin_multiplier: float
+    capex_multiplier: float
+    funding_buffer_multiplier: float
 
 
 def role(
@@ -85,6 +105,10 @@ COUNTRY_ALIASES = {
 COUNTRIES = {
     "united states": CountryProfile(
         name="United States",
+        currency_code="USD",
+        currency_locale="en-US",
+        usd_to_local=1.00,
+        local_rounding=100,
         labor_multiplier=1.00,
         employer_oncost=0.22,
         facility_multiplier=1.00,
@@ -93,6 +117,10 @@ COUNTRIES = {
     ),
     "india": CountryProfile(
         name="India",
+        currency_code="INR",
+        currency_locale="en-IN",
+        usd_to_local=83.00,
+        local_rounding=1000,
         labor_multiplier=0.42,
         employer_oncost=0.18,
         facility_multiplier=0.46,
@@ -101,6 +129,10 @@ COUNTRIES = {
     ),
     "united kingdom": CountryProfile(
         name="United Kingdom",
+        currency_code="GBP",
+        currency_locale="en-GB",
+        usd_to_local=0.79,
+        local_rounding=100,
         labor_multiplier=0.88,
         employer_oncost=0.20,
         facility_multiplier=0.92,
@@ -109,6 +141,10 @@ COUNTRIES = {
     ),
     "germany": CountryProfile(
         name="Germany",
+        currency_code="EUR",
+        currency_locale="de-DE",
+        usd_to_local=0.92,
+        local_rounding=100,
         labor_multiplier=0.93,
         employer_oncost=0.21,
         facility_multiplier=0.94,
@@ -117,6 +153,10 @@ COUNTRIES = {
     ),
     "singapore": CountryProfile(
         name="Singapore",
+        currency_code="SGD",
+        currency_locale="en-SG",
+        usd_to_local=1.35,
+        local_rounding=100,
         labor_multiplier=0.97,
         employer_oncost=0.17,
         facility_multiplier=1.08,
@@ -125,6 +165,10 @@ COUNTRIES = {
     ),
     "canada": CountryProfile(
         name="Canada",
+        currency_code="CAD",
+        currency_locale="en-CA",
+        usd_to_local=1.37,
+        local_rounding=100,
         labor_multiplier=0.90,
         employer_oncost=0.19,
         facility_multiplier=0.90,
@@ -133,6 +177,10 @@ COUNTRIES = {
     ),
     "australia": CountryProfile(
         name="Australia",
+        currency_code="AUD",
+        currency_locale="en-AU",
+        usd_to_local=1.52,
+        local_rounding=100,
         labor_multiplier=0.95,
         employer_oncost=0.18,
         facility_multiplier=0.96,
@@ -141,6 +189,10 @@ COUNTRIES = {
     ),
     "united arab emirates": CountryProfile(
         name="United Arab Emirates",
+        currency_code="AED",
+        currency_locale="en-AE",
+        usd_to_local=3.67,
+        local_rounding=100,
         labor_multiplier=0.83,
         employer_oncost=0.12,
         facility_multiplier=1.03,
@@ -149,6 +201,10 @@ COUNTRIES = {
     ),
     "brazil": CountryProfile(
         name="Brazil",
+        currency_code="BRL",
+        currency_locale="pt-BR",
+        usd_to_local=5.10,
+        local_rounding=100,
         labor_multiplier=0.58,
         employer_oncost=0.20,
         facility_multiplier=0.61,
@@ -157,6 +213,10 @@ COUNTRIES = {
     ),
     "default": CountryProfile(
         name="Global Benchmark",
+        currency_code="USD",
+        currency_locale="en-US",
+        usd_to_local=1.00,
+        local_rounding=100,
         labor_multiplier=0.85,
         employer_oncost=0.19,
         facility_multiplier=0.85,
@@ -390,6 +450,80 @@ INDUSTRIES = {
 }
 
 
+LEANNESS_ALIASES = {
+    "lean": "lean",
+    "leanest": "lean",
+    "balanced": "balanced",
+    "standard": "balanced",
+    "aggressive": "aggressive",
+    "growth": "aggressive",
+}
+
+
+LEANNESS = {
+    "lean": LeannessProfile(
+        name="Lean",
+        description="Keeps the team compact, expects broader role scope, and reduces non-essential spend.",
+        headcount_multiplier=0.76,
+        salary_multiplier=1.05,
+        band_spread_delta=0.04,
+        revenue_multiplier=0.94,
+        tools_multiplier=0.92,
+        facilities_multiplier=0.84,
+        compliance_multiplier=0.94,
+        sales_marketing_multiplier=0.82,
+        general_admin_multiplier=0.88,
+        capex_multiplier=0.84,
+        funding_buffer_multiplier=0.92,
+    ),
+    "balanced": LeannessProfile(
+        name="Balanced",
+        description="Maintains a practical mix of efficiency and growth, with a conventional scale-up pace.",
+        headcount_multiplier=1.00,
+        salary_multiplier=1.00,
+        band_spread_delta=0.00,
+        revenue_multiplier=1.00,
+        tools_multiplier=1.00,
+        facilities_multiplier=1.00,
+        compliance_multiplier=1.00,
+        sales_marketing_multiplier=1.00,
+        general_admin_multiplier=1.00,
+        capex_multiplier=1.00,
+        funding_buffer_multiplier=1.00,
+    ),
+    "aggressive": LeannessProfile(
+        name="Aggressive Growth",
+        description="Adds headcount earlier, invests more heavily in expansion, and accepts higher near-term burn.",
+        headcount_multiplier=1.24,
+        salary_multiplier=0.98,
+        band_spread_delta=-0.02,
+        revenue_multiplier=1.08,
+        tools_multiplier=1.08,
+        facilities_multiplier=1.14,
+        compliance_multiplier=1.08,
+        sales_marketing_multiplier=1.18,
+        general_admin_multiplier=1.10,
+        capex_multiplier=1.16,
+        funding_buffer_multiplier=1.08,
+    ),
+}
+
+
+INDUSTRY_OPTIONS = tuple(
+    {"value": key, "label": profile.name}
+    for key, profile in INDUSTRIES.items()
+)
+COUNTRY_OPTIONS = tuple(
+    {"value": key, "label": profile.name}
+    for key, profile in COUNTRIES.items()
+    if key != "default"
+)
+LEANNESS_OPTIONS = tuple(
+    {"value": key, "label": profile.name, "description": profile.description}
+    for key, profile in LEANNESS.items()
+)
+
+
 def normalize_key(value: str) -> str:
     lowered = value.strip().lower()
     lowered = re.sub(r"[^a-z0-9\s-]", "", lowered)
@@ -423,8 +557,26 @@ def resolve_industry(industry: str) -> tuple[str, IndustryProfile]:
     return "saas", INDUSTRIES["saas"]
 
 
+def resolve_leanness(leanness: str) -> tuple[str, LeannessProfile]:
+    key = normalize_key(leanness)
+    key = LEANNESS_ALIASES.get(key, key)
+    if key in LEANNESS:
+        return key, LEANNESS[key]
+
+    return "balanced", LEANNESS["balanced"]
+
+
 def round_money(value: float) -> int:
     return int(round(value / 1000.0) * 1000)
+
+
+def round_local_money(value: float, country_profile: CountryProfile) -> int:
+    step = max(country_profile.local_rounding, 1)
+    return int(round(value / step) * step)
+
+
+def convert_to_local(amount_usd: int, country_profile: CountryProfile) -> int:
+    return round_local_money(amount_usd * country_profile.usd_to_local, country_profile)
 
 
 def allocate_role_counts(roles: tuple[RoleTemplate, ...], total_headcount: int, year: int) -> dict[str, int]:
@@ -447,12 +599,18 @@ def allocate_role_counts(roles: tuple[RoleTemplate, ...], total_headcount: int, 
     return counts
 
 
-def salary_position_modifier(role_template: RoleTemplate, count_for_role: int, index: int) -> tuple[float, str]:
+def salary_position_modifier(
+    role_template: RoleTemplate,
+    count_for_role: int,
+    index: int,
+    leanness_profile: LeannessProfile,
+) -> tuple[float, str]:
+    band_spread = max(0.04, role_template.band_spread + leanness_profile.band_spread_delta)
     if count_for_role == 1:
         return 1.03, "set slightly above the midpoint because this is the first seat carrying broad scope"
 
     fraction = index / max(count_for_role - 1, 1)
-    modifier = 1.0 + (role_template.band_spread / 2.0) - (role_template.band_spread * fraction)
+    modifier = 1.0 + (band_spread / 2.0) - (band_spread * fraction)
     modifier = max(0.90, min(1.12, modifier))
 
     if modifier >= 1.04:
@@ -466,11 +624,13 @@ def salary_reason(
     role_template: RoleTemplate,
     country_profile: CountryProfile,
     industry_profile: IndustryProfile,
+    leanness_profile: LeannessProfile,
     band_reason: str,
 ) -> str:
     parts = [
         role_template.rationale,
-        f"The estimate is adjusted to the {country_profile.name} labor market in USD-equivalent terms.",
+        f"The estimate is adjusted to the {country_profile.name} labor market and shown in {country_profile.currency_code}.",
+        f"The {leanness_profile.name.lower()} operating model influences the expected scope for this seat.",
         band_reason + ".",
     ]
 
@@ -487,6 +647,7 @@ def build_employees(
     roles: tuple[RoleTemplate, ...],
     country_profile: CountryProfile,
     industry_profile: IndustryProfile,
+    leanness_profile: LeannessProfile,
     year: int,
 ) -> list[dict[str, Any]]:
     templates = {entry.title: entry for entry in roles}
@@ -496,14 +657,16 @@ def build_employees(
     for title, count in role_counts.items():
         template = templates[title]
         for index in range(count):
-            modifier, band_reason = salary_position_modifier(template, count, index)
+            modifier, band_reason = salary_position_modifier(template, count, index, leanness_profile)
             salary = template.base_salary
             salary *= country_profile.labor_multiplier
             salary *= industry_profile.salary_multiplier
+            salary *= leanness_profile.salary_multiplier
             salary *= 1.0 + template.scarcity_premium
             salary *= market_drift
             salary *= modifier
-            final_salary = round_money(salary)
+            final_salary_usd = round_money(salary)
+            final_salary_local = convert_to_local(final_salary_usd, country_profile)
             employee_label = title if count == 1 else f"{title} {index + 1}"
 
             employees.append(
@@ -512,11 +675,13 @@ def build_employees(
                     "title": title,
                     "department": template.department,
                     "reports_to": template.reports_to or "Board",
-                    "salary_usd": final_salary,
+                    "salary_usd": final_salary_usd,
+                    "salary_local": final_salary_local,
                     "salary_reason": salary_reason(
                         role_template=template,
                         country_profile=country_profile,
                         industry_profile=industry_profile,
+                        leanness_profile=leanness_profile,
                         band_reason=band_reason,
                     ),
                 }
@@ -571,10 +736,18 @@ def build_year_plan(
     year: int,
     industry_profile: IndustryProfile,
     country_profile: CountryProfile,
+    leanness_profile: LeannessProfile,
 ) -> dict[str, Any]:
-    headcount = industry_profile.headcount_plan[year - 1]
+    headcount = max(1, int(round(industry_profile.headcount_plan[year - 1] * leanness_profile.headcount_multiplier)))
     role_counts = allocate_role_counts(industry_profile.roles, headcount, year)
-    employees = build_employees(role_counts, industry_profile.roles, country_profile, industry_profile, year)
+    employees = build_employees(
+        role_counts,
+        industry_profile.roles,
+        country_profile,
+        industry_profile,
+        leanness_profile,
+        year,
+    )
 
     payroll = sum(item["salary_usd"] for item in employees)
     revenue = round_money(
@@ -582,13 +755,25 @@ def build_year_plan(
         * industry_profile.revenue_per_head
         * industry_profile.revenue_ramp[year - 1]
         * country_profile.market_multiplier
+        * leanness_profile.revenue_multiplier
     )
     employer_cost = round_money(payroll * country_profile.employer_oncost)
-    tooling_cost = round_money(headcount * industry_profile.tools_per_employee)
-    facilities_cost = round_money(headcount * industry_profile.facility_per_employee * country_profile.facility_multiplier)
-    compliance_cost = round_money(headcount * industry_profile.compliance_per_employee)
-    sales_marketing_cost = round_money(revenue * industry_profile.sales_marketing_ratio)
-    general_admin_cost = round_money((headcount * 2800) + (45000 * year))
+    tooling_cost = round_money(headcount * industry_profile.tools_per_employee * leanness_profile.tools_multiplier)
+    facilities_cost = round_money(
+        headcount
+        * industry_profile.facility_per_employee
+        * country_profile.facility_multiplier
+        * leanness_profile.facilities_multiplier
+    )
+    compliance_cost = round_money(
+        headcount * industry_profile.compliance_per_employee * leanness_profile.compliance_multiplier
+    )
+    sales_marketing_cost = round_money(
+        revenue * industry_profile.sales_marketing_ratio * leanness_profile.sales_marketing_multiplier
+    )
+    general_admin_cost = round_money(
+        ((headcount * 2800) + (45000 * year)) * leanness_profile.general_admin_multiplier
+    )
     operating_costs = (
         payroll
         + employer_cost
@@ -598,10 +783,19 @@ def build_year_plan(
         + sales_marketing_cost
         + general_admin_cost
     )
-    capex = round_money(industry_profile.capex_plan[year - 1] * country_profile.facility_multiplier)
+    capex = round_money(
+        industry_profile.capex_plan[year - 1]
+        * country_profile.facility_multiplier
+        * leanness_profile.capex_multiplier
+    )
     gross_profit = round_money(revenue * industry_profile.gross_margin)
     funding_required = round_money(
-        max(0, (operating_costs + capex - gross_profit) * country_profile.funding_buffer)
+        max(
+            0,
+            (operating_costs + capex - gross_profit)
+            * country_profile.funding_buffer
+            * leanness_profile.funding_buffer_multiplier,
+        )
     )
 
     department_headcount: dict[str, int] = {}
@@ -613,18 +807,30 @@ def build_year_plan(
         "headcount": headcount,
         "headcount_by_department": dict(sorted(department_headcount.items())),
         "revenue_usd": revenue,
+        "revenue_local": convert_to_local(revenue, country_profile),
         "gross_profit_usd": gross_profit,
+        "gross_profit_local": convert_to_local(gross_profit, country_profile),
         "operating_costs_usd": operating_costs,
+        "operating_costs_local": convert_to_local(operating_costs, country_profile),
         "funding_required_usd": funding_required,
+        "funding_required_local": convert_to_local(funding_required, country_profile),
         "cost_breakdown": {
             "payroll_usd": payroll,
+            "payroll_local": convert_to_local(payroll, country_profile),
             "employer_costs_usd": employer_cost,
+            "employer_costs_local": convert_to_local(employer_cost, country_profile),
             "tooling_usd": tooling_cost,
+            "tooling_local": convert_to_local(tooling_cost, country_profile),
             "facilities_usd": facilities_cost,
+            "facilities_local": convert_to_local(facilities_cost, country_profile),
             "compliance_usd": compliance_cost,
+            "compliance_local": convert_to_local(compliance_cost, country_profile),
             "sales_marketing_usd": sales_marketing_cost,
+            "sales_marketing_local": convert_to_local(sales_marketing_cost, country_profile),
             "general_admin_usd": general_admin_cost,
+            "general_admin_local": convert_to_local(general_admin_cost, country_profile),
             "capex_usd": capex,
+            "capex_local": convert_to_local(capex, country_profile),
         },
         "org_structure": build_org_structure(role_counts, industry_profile.roles),
         "employees": employees,
@@ -634,6 +840,7 @@ def build_year_plan(
 def build_key_takeaways(
     industry_profile: IndustryProfile,
     country_profile: CountryProfile,
+    leanness_profile: LeannessProfile,
     yearly_plan: list[dict[str, Any]],
 ) -> list[str]:
     first_year = yearly_plan[0]
@@ -641,39 +848,50 @@ def build_key_takeaways(
     total_funding = sum(year["funding_required_usd"] for year in yearly_plan)
 
     return [
-        f"{industry_profile.name} in {country_profile.name} starts with {first_year['headcount']} people and reaches {last_year['headcount']} people by year {YEARS}.",
-        f"Year {YEARS} revenue is projected at about ${last_year['revenue_usd']:,} with operating costs near ${last_year['operating_costs_usd']:,}.",
-        f"Total external funding required across the first {YEARS} years is estimated at about ${total_funding:,}.",
+        f"{industry_profile.name} in {country_profile.name} on a {leanness_profile.name.lower()} plan starts with {first_year['headcount']} people and reaches {last_year['headcount']} people by year {YEARS}.",
+        f"Year {YEARS} revenue is projected at about {country_profile.currency_code} {last_year['revenue_local']:,} with operating costs near {country_profile.currency_code} {last_year['operating_costs_local']:,}.",
+        f"Total external funding required across the first {YEARS} years is estimated at about {country_profile.currency_code} {sum(year['funding_required_local'] for year in yearly_plan):,}.",
     ]
 
 
-def generate_company_plan(industry: str, country: str) -> dict[str, Any]:
+def generate_company_plan(industry: str, country: str, leanness: str = "balanced") -> dict[str, Any]:
     resolved_industry_key, industry_profile = resolve_industry(industry)
     resolved_country_key, country_profile = resolve_country(country)
+    resolved_leanness_key, leanness_profile = resolve_leanness(leanness)
 
-    yearly_plan = [build_year_plan(year, industry_profile, country_profile) for year in range(1, YEARS + 1)]
+    yearly_plan = [
+        build_year_plan(year, industry_profile, country_profile, leanness_profile)
+        for year in range(1, YEARS + 1)
+    ]
     cumulative_funding = 0
     for year in yearly_plan:
         cumulative_funding += year["funding_required_usd"]
         year["cumulative_funding_usd"] = cumulative_funding
+        year["cumulative_funding_local"] = convert_to_local(cumulative_funding, country_profile)
 
     return {
         "inputs": {
             "industry": industry,
             "country": country,
+            "leanness": leanness,
         },
         "matched_profiles": {
             "industry_key": resolved_industry_key,
             "industry_name": industry_profile.name,
             "country_key": resolved_country_key,
             "country_name": country_profile.name,
+            "currency_code": country_profile.currency_code,
+            "currency_locale": country_profile.currency_locale,
+            "leanness_key": resolved_leanness_key,
+            "leanness_name": leanness_profile.name,
         },
         "assumptions": [
-            "All figures are annual USD-equivalent estimates for planning, not payroll advice or investor guidance.",
+            "Local-currency values are derived from fixed planning exchange-rate assumptions rather than live FX quotes.",
+            "All figures are annual planning estimates for scenario design, not payroll advice or investor guidance.",
             "The model assumes a five-year company build with hiring layered in as capability needs appear.",
             "Funding need is calculated as operating burn plus capital expense not covered by gross profit, with a small execution buffer.",
         ],
         "narrative": industry_profile.narrative,
-        "key_takeaways": build_key_takeaways(industry_profile, country_profile, yearly_plan),
+        "key_takeaways": build_key_takeaways(industry_profile, country_profile, leanness_profile, yearly_plan),
         "yearly_plan": yearly_plan,
     }

@@ -44,6 +44,21 @@ On Command Prompt:
 .\.venv\Scripts\activate.bat
 ```
 
+If your environment was created by MSYS2 or MINGW Python, the activation script may be under `.venv\bin` instead:
+
+On PowerShell:
+
+```powershell
+.\.venv\bin\Activate.ps1
+```
+
+You can also skip activation entirely and run the virtual environment Python directly:
+
+```powershell
+.\.venv\bin\python.exe -m pip install -r requirements.txt
+.\.venv\bin\python.exe app.py
+```
+
 4. Install dependencies:
 
 ```bash

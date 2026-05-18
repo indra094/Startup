@@ -109,6 +109,11 @@ h1 {
   padding: 28px;
 }
 
+.planner-grid {
+  display: grid;
+  gap: 16px;
+}
+
 .planner-card label,
 .year-picker {
   display: grid;
@@ -118,6 +123,7 @@ h1 {
 }
 
 .planner-card input,
+.planner-card select,
 .year-picker select {
   width: 100%;
   padding: 14px 16px;
@@ -268,6 +274,21 @@ thead th {
   z-index: 1;
 }
 
+.money-stack {
+  display: grid;
+  gap: 3px;
+}
+
+.money-stack strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.money-stack span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .reason-cell {
   min-width: 420px;
 }
@@ -297,9 +318,19 @@ thead th {
     grid-template-columns: 1fr;
   }
 
+  .planner-grid {
+    grid-template-columns: 1fr;
+  }
+
   .panel-heading {
     align-items: start;
     flex-direction: column;
+  }
+}
+
+@media (min-width: 981px) {
+  .planner-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
