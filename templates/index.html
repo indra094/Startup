@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Startup Blueprint</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Startup Blueprint</p>
+          <h1>Turn an industry and country into a five-year company plan.</h1>
+          <p class="subtitle">
+            This planner estimates org structure, yearly funding need, revenue, operating costs,
+            headcount, designations, salaries, and the reasoning behind each salary recommendation.
+          </p>
+        </div>
+
+        <form id="planner-form" class="planner-card">
+          <label>
+            <span>Industry</span>
+            <input
+              type="text"
+              id="industry"
+              name="industry"
+              placeholder="SaaS, fintech, manufacturing, consulting..."
+              required
+            />
+          </label>
+
+          <label>
+            <span>Country</span>
+            <input
+              type="text"
+              id="country"
+              name="country"
+              placeholder="United States, India, Singapore..."
+              required
+            />
+          </label>
+
+          <button type="submit">Generate blueprint</button>
+          <p class="helper">
+            Outputs are generated in annual USD-equivalent terms so countries stay comparable.
+          </p>
+          <p id="status" class="status"></p>
+        </form>
+      </section>
+
+      <section id="results" class="results hidden">
+        <div class="summary-grid" id="summary-grid"></div>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Recommended Structure</p>
+              <h2>Top org design for year 5</h2>
+            </div>
+          </div>
+          <div class="org-grid" id="org-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Financial Outlook</p>
+              <h2>Annual revenue, costs, and funding need</h2>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Headcount</th>
+                  <th>Revenue</th>
+                  <th>Gross Profit</th>
+                  <th>Operating Costs</th>
+                  <th>Funding Required</th>
+                  <th>Cumulative Funding</th>
+                </tr>
+              </thead>
+              <tbody id="financial-table"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Compensation Detail</p>
+              <h2>Headcount, designations, salaries, and salary logic</h2>
+            </div>
+            <label class="year-picker">
+              <span>View year</span>
+              <select id="year-select"></select>
+            </label>
+          </div>
+
+          <div class="department-pills" id="department-pills"></div>
+          <div class="table-wrap tall">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name / Seat</th>
+                  <th>Designation</th>
+                  <th>Department</th>
+                  <th>Reports To</th>
+                  <th>Salary</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody id="employee-table"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
