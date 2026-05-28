@@ -10,7 +10,7 @@ const departmentPills = document.getElementById("department-pills");
 
 let latestPlan = null;
 
-const money = new Intl.NumberFormat("en-US", {
+const usdFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
   maximumFractionDigits: 0,
@@ -25,6 +25,31 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function getLocalFormatter(plan) {
+  return new Intl.NumberFormat(plan.matched_profiles.currency_locale || undefined, {
+    style: "currency",
+    currency: plan.matched_profiles.currency_code,
+    maximumFractionDigits: 0,
+  });
+}
+
+function formatUsd(value) {
+  return usdFormatter.format(value);
+}
+
+function formatLocal(value, plan) {
+  return getLocalFormatter(plan).format(value);
+}
+
+function renderMoneyPair(localValue, usdValue, plan) {
+  return `
+    <div class="money-stack">
+      <strong>${escapeHtml(formatLocal(localValue, plan))}</strong>
+      <span>${escapeHtml(formatUsd(usdValue))} USD equivalent</span>
+    </div>
+  `;
+}
+
 function setStatus(message, isError = false) {
   statusNode.textContent = message;
   statusNode.dataset.error = isError ? "true" : "false";
@@ -32,8 +57,12 @@ function setStatus(message, isError = false) {
 
 function renderSummary(plan) {
   const finalYear = plan.yearly_plan.at(-1);
-  const totalFunding = plan.yearly_plan.reduce(
+  const totalFundingUsd = plan.yearly_plan.reduce(
     (sum, year) => sum + year.funding_required_usd,
+    0,
+  );
+  const totalFundingLocal = plan.yearly_plan.reduce(
+    (sum, year) => sum + year.funding_required_local,
     0,
   );
 
@@ -41,22 +70,22 @@ function renderSummary(plan) {
     {
       label: "Profile Match",
       value: `${plan.matched_profiles.industry_name} in ${plan.matched_profiles.country_name}`,
-      meta: plan.narrative,
+      meta: `${plan.matched_profiles.leanness_name} operating model.`,
     },
     {
       label: "Year 5 Revenue",
-      value: money.format(finalYear.revenue_usd),
-      meta: "Estimated annual revenue by the fifth year.",
+      value: formatLocal(finalYear.revenue_local, plan),
+      meta: `${formatUsd(finalYear.revenue_usd)} USD equivalent by the fifth year.`,
     },
     {
       label: "Year 5 Operating Costs",
-      value: money.format(finalYear.operating_costs_usd),
-      meta: "Estimated annual operating cost base by the fifth year.",
+      value: formatLocal(finalYear.operating_costs_local, plan),
+      meta: `${formatUsd(finalYear.operating_costs_usd)} USD equivalent annual cost base.`,
     },
     {
       label: "Total Funding Need",
-      value: money.format(totalFunding),
-      meta: "Combined funding requirement over the first five years.",
+      value: formatLocal(totalFundingLocal, plan),
+      meta: `${formatUsd(totalFundingUsd)} USD equivalent across the first five years.`,
     },
   ];
 
@@ -124,11 +153,11 @@ function renderFinancials(plan) {
         <tr>
           <td>Year ${year.year}</td>
           <td>${year.headcount}</td>
-          <td>${money.format(year.revenue_usd)}</td>
-          <td>${money.format(year.gross_profit_usd)}</td>
-          <td>${money.format(year.operating_costs_usd)}</td>
-          <td>${money.format(year.funding_required_usd)}</td>
-          <td>${money.format(year.cumulative_funding_usd)}</td>
+          <td>${renderMoneyPair(year.revenue_local, year.revenue_usd, plan)}</td>
+          <td>${renderMoneyPair(year.gross_profit_local, year.gross_profit_usd, plan)}</td>
+          <td>${renderMoneyPair(year.operating_costs_local, year.operating_costs_usd, plan)}</td>
+          <td>${renderMoneyPair(year.funding_required_local, year.funding_required_usd, plan)}</td>
+          <td>${renderMoneyPair(year.cumulative_funding_local, year.cumulative_funding_usd, plan)}</td>
         </tr>
       `,
     )
@@ -160,7 +189,7 @@ function renderEmployeeTable(plan, selectedYear) {
           <td>${escapeHtml(employee.title)}</td>
           <td>${escapeHtml(employee.department)}</td>
           <td>${escapeHtml(employee.reports_to)}</td>
-          <td>${money.format(employee.salary_usd)}</td>
+          <td>${renderMoneyPair(employee.salary_local, employee.salary_usd, plan)}</td>
           <td class="reason-cell">${escapeHtml(employee.salary_reason)}</td>
         </tr>
       `,
@@ -190,6 +219,7 @@ form.addEventListener("submit", async (event) => {
 
   const industry = document.getElementById("industry").value.trim();
   const country = document.getElementById("country").value.trim();
+  const leanness = document.getElementById("leanness").value.trim();
 
   setStatus("Generating your startup blueprint...");
 
@@ -199,7 +229,7 @@ form.addEventListener("submit", async (event) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ industry, country }),
+      body: JSON.stringify({ industry, country, leanness }),
     });
 
     const data = await response.json();

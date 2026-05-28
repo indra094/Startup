@@ -1,9 +1,10 @@
 # Startup Blueprint
 
-A small Python web app that generates a five-year startup plan from two inputs:
+A small Python web app that generates a five-year startup plan from three inputs:
 
 - `industry`
 - `country`
+- `leanness`
 
 The app produces:
 
@@ -13,7 +14,7 @@ The app produces:
 - Expected annual operating costs
 - Estimated annual funding required
 - Per-person designations
-- Annual salaries for each seat
+- Annual salaries for each seat in the selected country's currency
 - Salary explanations for each seat
 
 ## Requirements
@@ -82,12 +83,18 @@ python -m unittest discover -s tests -v
 ## How to use
 
 1. Enter an `industry` such as `saas`, `fintech`, `healthtech`, `ecommerce`, `manufacturing`, or `consulting`.
-2. Enter a `country` such as `United States`, `India`, `Germany`, or `Singapore`.
-3. Click `Generate blueprint`.
-4. Review the five-year financial plan, org structure, and employee salary rationale.
+2. Choose a `country` such as `United States`, `India`, `Germany`, or `Singapore`.
+3. Choose a `leanness` profile:
+   - `Lean` for a smaller team with broader role scope
+   - `Balanced` for a standard scaling pace
+   - `Aggressive Growth` for earlier hiring and higher burn
+4. Click `Generate blueprint`.
+5. Review the five-year financial plan, org structure, and employee salary rationale.
 
 ## Notes
 
-- Figures are annual USD-equivalent planning estimates.
+- Salaries are shown in the selected country's local currency, with USD-equivalent context shown in the UI.
+- Local-currency figures use fixed planning exchange-rate assumptions rather than live FX rates.
 - Country input adjusts labor, overhead, facilities, and market scale.
 - Industry input changes staffing mix, compliance intensity, margin profile, and revenue ramp.
+- Leanness changes hiring pace, operating spend, and salary band assumptions.
